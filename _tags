@@ -1,0 +1,23 @@
+# OASIS_START
+# DO NOT EDIT (digest: d88e6dfb6cae60285d2f671f3953510b)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Executable john
+"src/ulc.byte": oasis_executable_john_byte
+<src/*.ml{,i}>: oasis_executable_john_byte
+"src/ulc.byte": oasis_executable_john_native
+<src/*.ml{,i}>: oasis_executable_john_native
+# OASIS_STOP
+
+true: use_menhir
