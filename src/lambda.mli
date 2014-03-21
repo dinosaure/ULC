@@ -17,11 +17,14 @@ val empty_ctx : context
 val length_of_ctx : context -> int
 
 val name_of_index : location -> context -> int -> string
+val primitive_of_index : location -> context -> int -> t
 val index_of_name : location -> context -> string -> int
 
 val add_name : context -> string -> context
+val add_primitive : context -> string -> t -> context
 
 val to_string : context -> t -> string
+val print_context : context -> unit
 
 val shifting : int -> t -> t
 val substitution : int -> t -> t -> t

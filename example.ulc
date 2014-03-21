@@ -2,3 +2,9 @@
 (\l.\m.\n. l m n) (\t.\f. t) (\x. x) (\x. x x);
 (\x. x) (\x. x x);
 (\x. x);
+(\x. \x. x) (\y. y) (\z. z);
+succ zero;
+(\ f. (\ x. (f (((\ fa. (\ xa. xa)) f) x))));
+and true true;
+or true false;
+if true (succ zero) (succ zero);

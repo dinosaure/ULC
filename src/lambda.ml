@@ -6,8 +6,8 @@ type t =
   | Abs of (location * string * t)
   | Val of (location * int * int)
 
-type binding = Name
-type context = (string * binding) list
+and context = (string * binding) list
+and binding = Name | Primitive of t
 
 exception Error of (location * string)
 exception NoRuleApplies
@@ -32,9 +32,16 @@ let length_of_ctx ctx = List.length ctx
 
 let add_binding ctx x bind = (x, bind) :: ctx
 let add_name ctx x = add_binding ctx x Name
+let add_primitive ctx x v = add_binding ctx x (Primitive v)
 
 let name_of_index loc ctx index =
   try let (n, _) = List.nth ctx index in n
+  with _ -> raise (Error (loc, "Variable lookup failure"))
+
+let primitive_of_index loc ctx index =
+  try let (n, v) = List.nth ctx index in match v with
+    | Name -> raise (Error (loc, "Variable is not primitive"))
+    | Primitive t -> t
   with _ -> raise (Error (loc, "Variable lookup failure"))
 
 let index_of_name loc ctx name =
@@ -68,8 +75,24 @@ let to_string ctx t =
       if length_of_ctx ctx = depth then
         Buffer.add_string buffer (name_of_index loc ctx index)
       else
-        Buffer.add_string buffer "[bad index]"
+        begin
+          Buffer.add_string buffer "[bad index ";
+          Buffer.add_string buffer (string_of_int index);
+          Buffer.add_string buffer "]"
+        end
   in aux ctx t; Buffer.contents buffer
+
+let print ctx fmt t =
+  Printf.fprintf fmt "%s" (to_string ctx t)
+
+let print_context l =
+  let rec aux fmt = function
+  | [] -> ()
+  | [ (x, _) ] -> Printf.fprintf fmt "%s" x
+  | (x, _) :: r ->
+    Printf.fprintf fmt "%s; " x; aux fmt r
+  in
+  Printf.printf "[%a]\n" aux l
 
 (* Shifting *)
 
@@ -98,6 +121,12 @@ let is_val ctx = function
   | Abs (_, _, _) -> true
   | _ -> false
 
+let is_primitive loc ctx index =
+  try let (n, v) = List.nth ctx index in match v with
+    | Name -> false
+    | Primitive _ -> true
+  with _ -> raise (Error (loc, "Variable lookup failure"))
+
 let rec eval ctx t =
   let rec aux ctx = function
     | App (loc, Abs (_, name, expr), value) when is_val ctx value ->
@@ -108,6 +137,9 @@ let rec eval ctx t =
     | App (loc, a, b) ->
       let a' = eval ctx a in
       App (loc, a', b)
+    | Val (loc, index, depth) when is_primitive loc ctx index ->
+      let p = primitive_of_index loc ctx index in
+      shifting (index + 1) p
     | _ -> raise NoRuleApplies
   in try let t' = aux ctx t in eval ctx t'
     with NoRuleApplies -> t

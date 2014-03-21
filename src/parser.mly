@@ -16,7 +16,9 @@
 %token <string> TermID
 
 %start main
+%start single
 %type <Lambda.context -> (Lambda.t list * Lambda.context)> main
+%type <Lambda.context -> Lambda.t> single
 
 %%
 
@@ -28,6 +30,12 @@ main:
     let x = x ctx in
     let (r, ctx') = r ctx in
     (x :: r, ctx') }
+
+single:
+  | EOF
+  { fun ctx -> raise (Failure "EOF")}
+  | x = term EOF
+  { x }
 
 term:
   | a = application
